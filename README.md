@@ -1,3 +1,3 @@
-# Addon Name
+# ActionBarSaver
 
-This is the repository for <Addon Name>. Modified for Ascension.gg. 
+This is the repository for ActionBarSaver. Modified for Ascension.gg. 
