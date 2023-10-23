@@ -4,6 +4,7 @@
 ## Author: Shadowed
 ## SavedVariables: ActionBarSaverDB
 ## LoadManagers: AddonLoader
+## Version: 1.1
 ## X-LoadOn-Slash: /actionbarsaver, /abs
 
 localization.enUS.lua

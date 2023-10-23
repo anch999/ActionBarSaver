@@ -9,8 +9,8 @@ local L = ABS.locals
 local restoreErrors, spellCache, macroCache, macroNameCache, highestRanks = {}, {}, {}, {}, {}
 local iconCache, playerClass
 
-local MAX_MACROS = 54
-local MAX_CHAR_MACROS = 18
+local MAX_MACROS = 72
+local MAX_CHAR_MACROS = 36
 local MAX_GLOBAL_MACROS = 36
 local MAX_ACTION_BUTTONS = 144
 local POSSESSION_START = 121
