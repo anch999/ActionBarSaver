@@ -3,10 +3,17 @@
 ## Notes: Saves and restores your action bars
 ## Author: Shadowed
 ## SavedVariables: ActionBarSaverDB
+## SavedVariablesPerCharacter: ActionBarSaverCharDB
 ## LoadManagers: AddonLoader
 ## Version: 1.1
 ## X-LoadOn-Slash: /actionbarsaver, /abs
 
+embeds.xml
+
 localization.enUS.lua
 
 ActionBarSaver.lua
+Utils.lua
+ActionBarSaverUI.lua
+ActionBarSaverOptions.lua
+Minimap.lua
