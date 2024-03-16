@@ -1,4 +1,5 @@
 local ABS = ActionBarSaver
+local L = ABS.locals
 
 --Borrowed from Atlas, thanks Dan!
 local function round(num, idp)
@@ -164,27 +165,23 @@ function ABS:CreateOptionsUI()
     options.restoreProfile:SetText("Restore profile")
     options.restoreProfile:SetScript("OnClick", function() ABS:RestoreProfile(self.selectedProfile) end)
 
-	options.editProfile = CreateFrame("Button", nil, options.frame.panel, "OptionsButtonTemplate")
-    options.editProfile:SetSize(130,25)
-    options.editProfile:SetPoint("TOPLEFT", options.frame.panel, "TOPLEFT", 290, -240)
-    options.editProfile:SetText("Edit profile")
-    options.editProfile:SetScript("OnClick", function()  end)
+	options.renameProfile = CreateFrame("Button", nil, options.frame.panel, "OptionsButtonTemplate")
+    options.renameProfile:SetSize(130,25)
+    options.renameProfile:SetPoint("TOPLEFT", options.frame.panel, "TOPLEFT", 290, -240)
+    options.renameProfile:SetText("Rename profile")
+    options.renameProfile:SetScript("OnClick", function() StaticPopup_Show("ACTIONBARSAVER_RENAME_PROFILE") end)
 
 	options.addProfile = CreateFrame("Button", nil, options.frame.panel, "OptionsButtonTemplate")
     options.addProfile:SetSize(130,25)
     options.addProfile:SetPoint("TOPLEFT", options.frame.panel, "TOPLEFT", 30, -275)
     options.addProfile:SetText("Add profile")
-    options.addProfile:SetScript("OnClick", function()  end)
+    options.addProfile:SetScript("OnClick", function() StaticPopup_Show("ACTIONBARSAVER_ADD_PROFILE") end)
 
 	options.deleteProfile = CreateFrame("Button", nil, options.frame.panel, "OptionsButtonTemplate")
     options.deleteProfile:SetSize(130,25)
     options.deleteProfile:SetPoint("TOPLEFT", options.frame.panel, "TOPLEFT", 160, -275)
     options.deleteProfile:SetText("Delete Profile")
-    options.deleteProfile:SetScript("OnClick", function()
-		self.db.sets[self.class][self.selectedProfile] = nil
-		ABS:UpdateProfileSelect()
-	end)
-
+    options.deleteProfile:SetScript("OnClick", function() StaticPopup_Show("ACTIONBARSAVER_DELETE_PROFILE") end)
 	
 	------------------------------ Specialization Panel ------------------------------
 
@@ -236,68 +233,6 @@ function ABS:CreateOptionsUI()
     options.restoreDefaultProfile:SetScript("OnClick", function() ABS:RestoreProfile(ABS:GetSpecId(), ABS.class, "charDB") end)
 	options.restoreDefaultProfile:SetScript("OnEnter", function(frame) self:AddGameTooltip(frame, "Restores the specialization default profile.") end)
     options.restoreDefaultProfile:SetScript("OnLeave", function() GameTooltip:Hide() end)
-	------------------------------ Panel 3 ------------------------------
-
-	--[[ options.hideMenu = CreateFrame("CheckButton", nil, options.frame.panel, "UICheckButtonTemplate")
-	options.hideMenu:SetPoint("TOPLEFT", 30, -60)
-	options.hideMenu.lable = options.hideMenu:CreateFontString(nil , "BORDER", "GameFontNormal")
-	options.hideMenu.lable:SetJustifyH("LEFT")
-	options.hideMenu.lable:SetPoint("LEFT", 30, 0)
-	options.hideMenu.lable:SetText("Hide Main Menu")
-	options.hideMenu:SetScript("OnClick", function()
-		if self.db.hideMenu then
-			SpecMenuFrame:Show()
-			self.db.hideMenu = false
-		else
-			SpecMenuFrame:Hide()
-			self.db.hideMenu = true
-		end
-	end)
-
-	options.onlyShowOnMouseOver = CreateFrame("CheckButton", "ActionBarSaver_Options_ShowOnMouseOver", options.frame.panel, "UICheckButtonTemplate")
-	options.onlyShowOnMouseOver:SetPoint("TOPLEFT", 30, -95)
-	options.onlyShowOnMouseOver.lable = options.onlyShowOnMouseOver:CreateFontString(nil , "BORDER", "GameFontNormal")
-	options.onlyShowOnMouseOver.lable:SetJustifyH("LEFT")
-	options.onlyShowOnMouseOver.lable:SetPoint("LEFT", 30, 0)
-	options.onlyShowOnMouseOver.lable:SetText("Only show menu button on mouse over")
-	options.onlyShowOnMouseOver:SetScript("OnEnter", function(self)
-        GameTooltip:ClearLines()
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", -(self:GetWidth() / 2), 5)
-        GameTooltip:AddLine("Only shows the main menu button on mouse over")
-        GameTooltip:Show()
-    end)
-    options.onlyShowOnMouseOver:SetScript("OnLeave", function() GameTooltip:Hide() end)
-	options.onlyShowOnMouseOver:SetScript("OnClick", function()
-		if self.db.ShowMenuOnHover then
-			SpecMenuFrame_Menu:Show()
-            SpecMenuFrame_Favorite:Show()
-            SpecMenuFrame.icon:Show()
-			SpecMenuFrame.Text:Show()
-			self.db.ShowMenuOnHover = false
-		else
-			SpecMenuFrame_Menu:Hide()
-            SpecMenuFrame_Favorite:Hide()
-            SpecMenuFrame.icon:Hide()
-			SpecMenuFrame.Text:Hide()
-			self.db.ShowMenuOnHover = true
-		end
-
-	end)
-
-	options.autoMenu = CreateFrame("CheckButton", nil, options.frame.panel, "UICheckButtonTemplate")
-	options.autoMenu:SetPoint("TOPLEFT", 30, -130)
-	options.autoMenu.lable = options.autoMenu:CreateFontString(nil , "BORDER", "GameFontNormal")
-	options.autoMenu.lable:SetJustifyH("LEFT")
-	options.autoMenu.lable:SetPoint("LEFT", 30, 0)
-	options.autoMenu.lable:SetText("Auto open menu of mouse over")
-	options.autoMenu:SetScript("OnEnter", function(self)
-        GameTooltip:ClearLines()
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", -(self:GetWidth() / 2), 5)
-        GameTooltip:AddLine("Auto opens the menu when you mouse over the button. \nHolding alt will open the enchant specs menu")
-        GameTooltip:Show()
-    end)
-    options.autoMenu:SetScript("OnLeave", function() GameTooltip:Hide() end)
-	options.autoMenu:SetScript("OnClick", function() self.db.options.autoMenu = not self.db.options.autoMenu end) ]]
 
 	end
 
@@ -376,11 +311,6 @@ function ABS:CreateOptionsUI()
 		UIDropDownMenu_SetSelectedID(self.options.specMenu)
 		UIDropDownMenu_SetWidth(self.options.specMenu, 150)
 
---[[ 		UIDropDownMenu_Initialize(self.options.txtSize, self.OptionsTxtMenuInitialize)
-		UIDropDownMenu_SetSelectedID(self.options.txtSize)
-		UIDropDownMenu_SetText(self.options.txtSize, self.db.txtSize)
-		UIDropDownMenu_SetWidth(self.options.txtSize, 150) ]]
-
 		UIDropDownMenu_Initialize(self.options.profileSelectionSpec, self.OptionsProfileSelectionSpecInitialize)
 		UIDropDownMenu_SetSelectedID(self.options.profileSelectionSpec)
 		UIDropDownMenu_SetWidth(self.options.profileSelectionSpec, 150)
@@ -398,3 +328,101 @@ function ABS:CreateOptionsUI()
 			ABS:OpenOptions(ABS:GetSpecId())
 		end
 	end)
+
+function ABS:RenameProfile(old, new)
+	new = string.trim(new or "")
+	old = string.trim(old or "")
+
+	if( new == old ) then
+		self:Print(string.format(L["You cannot rename \"%s\" to \"%s\" they are the same profile names."], old, new))
+		return
+	elseif( new == "" ) then
+		self:Print(string.format(L["No name specified to rename \"%s\" to."], old))
+		return
+	elseif( self.db.sets[self.class][new] ) then
+		self:Print(string.format(L["Cannot rename \"%s\" to \"%s\" a profile already exists for %s."], old, new, (UnitClass("player"))))
+		return
+	elseif( not self.db.sets[self.class][old] ) then
+		self:Print(string.format(L["No profile with the name \"%s\" exists."], old))
+		return
+	end
+
+	self.db.sets[self.class][new] = CopyTable(self.db.sets[self.class][old])
+	self.db.sets[self.class][old] = nil
+
+	self:Print(string.format(L["Renamed \"%s\" to \"%s\""], old, new))
+	return true
+end
+
+	--[[
+StaticPopupDialogs["ACTIONBARSAVER_ADD_NEW_PROFILE"]
+Adds new profile
+]]
+StaticPopupDialogs["ACTIONBARSAVER_ADD_PROFILE"] = {
+	text = "Add and save current bars as new profile",
+	button1 = "Add Profile",
+	button2 = "Cancel",
+	OnShow = function(self)
+		self:SetFrameStrata("TOOLTIP")
+	end,
+	OnAccept = function(self)
+		local text = self.editBox:GetText()
+		if not ABS.db.sets[ABS.class][text] then
+			ABS:SaveProfile(text)
+		else
+			ABS:Print(string.format("Cannot add "..text.." as a profile of that name already exists"))
+		end
+	end,
+	hasEditBox = 1,
+	timeout = 0,
+	whileDead = 1,
+	hideOnEscape = 1
+}
+
+	--[[
+StaticPopupDialogs["ACTIONBARSAVER_RENAME_PROFILE"]
+Renames current selected profile
+]]
+StaticPopupDialogs["ACTIONBARSAVER_RENAME_PROFILE"] = {
+	text = "Rename the currently selected profile",
+	button1 = "Rename Profile",
+	button2 = "Cancel",
+	OnShow = function(self)
+		self:SetFrameStrata("TOOLTIP")
+		self.editBox:SetText(ABS.selectedProfile)
+	end,
+	OnAccept = function(self)
+		local text = self.editBox:GetText()
+		local success = ABS:RenameProfile(ABS.selectedProfile, text)
+		if success then
+			ABS.selectedProfile = text
+			ABS:UpdateProfileSelect()
+		end
+	end,
+	hasEditBox = 1,
+	timeout = 0,
+	whileDead = 1,
+	hideOnEscape = 1
+}
+
+	--[[
+StaticPopupDialogs["ACTIONBARSAVER_RENAME_PROFILE"]
+Renames current selected profile
+]]
+StaticPopupDialogs["ACTIONBARSAVER_DELETE_PROFILE"] = {
+	text = "Are you sure you want to delete this proflie?",
+	button1 = "Delete Profile",
+	button2 = "Cancel",
+	OnShow = function(self)
+		self:SetFrameStrata("TOOLTIP")
+	end,
+	OnAccept = function()
+		ABS:Print("Deleted saved profile "..ABS.selectedProfile..".")
+		ABS.db.sets[ABS.class][ABS.selectedProfile] = nil
+		ABS:UpdateProfileSelect()
+	end,
+	timeout = 0,
+	whileDead = 1,
+	hideOnEscape = 1
+}
+
