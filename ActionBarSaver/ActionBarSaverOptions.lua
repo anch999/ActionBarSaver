@@ -52,21 +52,23 @@ function ABS:OpenOptions(id)
 	local spec = self.charDB.Specs[id]
 	UIDropDownMenu_SetSelectedID(self.options.specMenu, id)
 	local num, text = 1, "No Selection"
-	if spec[1] ~= "No Selection" and spec[1] ~= "specDefault" then
-		for i, _ in pairs(self.db.sets[self.class]) do
-			num = num + 1
-			if i == spec[1] then
-				text = spec[1]
-				break
+	if spec then
+		if spec and spec[1] ~= "No Selection" and spec[1] ~= "specDefault" then
+			for i, _ in pairs(self.db.sets[self.class]) do
+				num = num + 1
+				if i == spec[1] then
+					text = spec[1]
+					break
+				end
 			end
+		elseif spec[1] == "specDefault" then
+			num = 2
+			text = "Spec Default"
+		else
+			num = 1
 		end
-	elseif spec[1] == "specDefault" then
-		num = 2
-		text = "Spec Default"
-	else
-		num = 1
+		self.options.autoSave:SetChecked(spec[2])
 	end
-
 	UIDropDownMenu_SetSelectedID(self.options.profileSelectionSpec, num)
 	UIDropDownMenu_SetText(self.options.profileSelectionSpec, text)
 
@@ -78,7 +80,7 @@ function ABS:OpenOptions(id)
 	self.options.checkCount:SetChecked(self.db.checkCount)
 	self.options.macro:SetChecked(self.db.macro)
 	self.options.restoreRank:SetChecked(self.db.restoreRank)
-	self.options.autoSave:SetChecked(spec[2])
+	
 	self.options.specNum = id
 end
 
@@ -321,13 +323,6 @@ function ABS:CreateOptionsUI()
 
 		ABS:OpenOptions(self:GetSpecId())
 	end
-
-	InterfaceOptionsFrame:HookScript("OnShow", function()
-		if InterfaceOptionsFrame:GetWidth() < 850 then InterfaceOptionsFrame:SetWidth(850) end
-		if InterfaceOptionsFrame and ABS.options.frame.panel:IsVisible() then
-			ABS:OpenOptions(ABS:GetSpecId())
-		end
-	end)
 
 function ABS:RenameProfile(old, new)
 	new = string.trim(new or "")

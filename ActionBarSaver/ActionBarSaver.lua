@@ -19,7 +19,8 @@ local POSSESSION_START = 121
 local POSSESSION_END = 132
 
 
-function ABS:OnInitialize()
+function ABS.ACE:OnEnable()
+	self = ABS
 	local defaults = {
 		macro = false,
 		checkCount = false,
@@ -68,6 +69,13 @@ function ABS:OnInitialize()
 	self.ACE:RegisterEvent("UNIT_SPELLCAST_START", events)
 
 	self:InitializeMinimap()
+
+	InterfaceOptionsFrame:HookScript("OnShow", function()
+		if InterfaceOptionsFrame:GetWidth() < 850 then InterfaceOptionsFrame:SetWidth(850) end
+		if InterfaceOptionsFrame and self.options.frame.panel:IsVisible() then
+			self:OpenOptions(self:GetSpecId())
+		end
+	end)
 
 end
 
@@ -201,6 +209,7 @@ end
 
 -- Restore a saved profile
 function ABS:RestoreProfile(name, overrideClass, savedb)
+	if not name then return end
 	if not savedb then savedb = "db" end
 	local set = self[savedb].sets[overrideClass or self.class][name]
 	if( not set ) then
@@ -525,7 +534,8 @@ SlashCmdList["ABS"] = function(msg)
 		else
 			self:Print(L["Auto restoring highest spell rank is now disabled!"])
 		end
-
+	elseif cmd == "options" then
+		ABS:OptionsToggle("ActionBarSaver")
 	-- Halp
 	else
 		self:Print(L["Slash commands"])
@@ -538,10 +548,11 @@ SlashCmdList["ABS"] = function(msg)
 		DEFAULT_CHAT_FRAME:AddMessage(L["/abs macro - Attempts to restore macros that have been deleted for a profile."])
 		DEFAULT_CHAT_FRAME:AddMessage(L["/abs rank - Toggles if ABS should restore the highest rank of the spell, or the one saved originally."])
 		DEFAULT_CHAT_FRAME:AddMessage(L["/abs list - Lists all saved profiles."])
+		DEFAULT_CHAT_FRAME:AddMessage("/abs options - Opens the options UI")
 	end
 end
 
--- Check if we need to load
+--[[ -- Check if we need to load
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(self, event, addon)
@@ -550,7 +561,7 @@ frame:SetScript("OnEvent", function(self, event, addon)
 		self:UnregisterEvent("ADDON_LOADED")
 	end
 end)
-
+ ]]
 --[[ checks to see if current spec is not last spec.
 Done this way to stop it messing up last spec if you stop the cast mid way
  ]]
