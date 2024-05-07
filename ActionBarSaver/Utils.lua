@@ -39,6 +39,7 @@ function ABS.ACE:AutoLoadTimer()
     elseif spec[1] ==  "specDefault" then
         ABS:RestoreProfile(ABS:GetSpecId(), ABS.class, "charDB")
     end
+    ABS.specChanged = false
 end
 
 function ABS:AddGameTooltip(frame, text)

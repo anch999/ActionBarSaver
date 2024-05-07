@@ -67,6 +67,7 @@ function ABS.ACE:OnEnable()
 	self.ACE:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED", events)
     self.ACE:RegisterEvent("ASCENSION_CA_SPECIALIZATION_ACTIVE_ID_CHANGED", events)
 	self.ACE:RegisterEvent("UNIT_SPELLCAST_START", events)
+	self.ACE:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED", events)
 
 	self:InitializeMinimap()
 
@@ -569,6 +570,7 @@ Done this way to stop it messing up last spec if you stop the cast mid way
     local target, spell = ...
         if event == "UNIT_SPELLCAST_START" then
             if target == "player" and string.find(spell, "Specialization") then
+				ABS.specChanged = false
                 if ABS.charDB.Specs[ABS:GetSpecId()][2] then
                     ABS:SaveProfile(ABS:GetSpecId(), "charDB")
                 end
@@ -578,8 +580,10 @@ Done this way to stop it messing up last spec if you stop the cast mid way
                 ABS.ACE:CancelTimer(ABS.ACE.autoLoadTimer)
             end
         end
-
-        if event == "ASCENSION_CA_SPECIALIZATION_ACTIVE_ID_CHANGED" or (event == "UNIT_SPELLCAST_SUCCEEDED" and target == "player" and  spell == "Activate Mystic Enchant Preset") then
-            ABS.ACE.autoLoadTimer = ABS.ACE:ScheduleTimer("AutoLoadTimer", 1)
+		if event == "ASCENSION_CA_SPECIALIZATION_ACTIVE_ID_CHANGED" then
+			ABS.specChanged = true
+		end
+        if event == "ASCENSION_CA_SPECIALIZATION_ACTIVE_ID_CHANGED" or ( ABS.specChanged and event == "UNIT_SPELLCAST_SUCCEEDED" and target == "player" and  spell == "Activate Mystic Enchant Preset") then
+			ABS.ACE.autoLoadTimer = ABS.ACE:ScheduleTimer("AutoLoadTimer", 2)
         end
 end
