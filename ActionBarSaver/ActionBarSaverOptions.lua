@@ -362,7 +362,9 @@ StaticPopupDialogs["ACTIONBARSAVER_ADD_PROFILE"] = {
 	end,
 	OnAccept = function(self)
 		local text = self.editBox:GetText()
-		if not ABS.db.sets[ABS.class][text] then
+		if text == "" then
+			ABS:Print(string.format("Cannot add profile with out a name"))
+		elseif not ABS.db.sets[ABS.class][text] then
 			ABS:SaveProfile(text)
 		else
 			ABS:Print(string.format("Cannot add "..text.." as a profile of that name already exists"))

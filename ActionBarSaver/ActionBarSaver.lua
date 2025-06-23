@@ -213,11 +213,11 @@ function ABS:RestoreProfile(name, overrideClass, savedb)
 	if not name then return end
 	if not savedb then savedb = "db" end
 	local set = self[savedb].sets[overrideClass or self.class][name]
-	if( not set ) then
+	if ( not set ) then
 		self:Print(string.format(L["No profile with the name \"%s\" exists."], set))
 		return
-	elseif( InCombatLockdown() ) then
-		self:Print(String.format(L["Unable to restore profile \"%s\", you are in combat."], set))
+	elseif ( InCombatLockdown() ) then
+		self:Print(string.format(L["Unable to restore profile \"%s\", you are in combat."], set))
 		return
 	end
 
