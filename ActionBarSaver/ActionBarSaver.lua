@@ -584,6 +584,6 @@ Done this way to stop it messing up last spec if you stop the cast mid way
 			ABS.specChanged = true
 		end
         if event == "ASCENSION_CA_SPECIALIZATION_ACTIVE_ID_CHANGED" or ( ABS.specChanged and event == "UNIT_SPELLCAST_SUCCEEDED" and target == "player" and  spell == "Activate Mystic Enchant Preset") then
-			ABS.ACE.autoLoadTimer = ABS.ACE:ScheduleTimer("AutoLoadTimer", 2)
+			ABS.ACE.autoLoadTimer = ABS.ACE:ScheduleTimer("AutoLoadTimer", 3)
         end
 end
