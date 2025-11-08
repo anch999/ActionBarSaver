@@ -1,6 +1,6 @@
-﻿--[[
+--[[
 Name: Dewdrop-2.0
-Revision: $Rev: 321 $
+Revision: $Rev: 327 $
 Author(s): ckknight (ckknight@gmail.com)
 Website: http://ckknight.wowinterface.com/
 Documentation: http://wiki.wowace.com/index.php/Dewdrop-2.0
@@ -11,7 +11,7 @@ License: LGPL v2.1
 ]]
 
 local MAJOR_VERSION = "Dewdrop-2.0"
-local MINOR_VERSION = tonumber(strmatch("$Revision: 321 $", "%d+")) + 90000
+local MINOR_VERSION = tonumber(strmatch("$Revision: 328 $", "%d+")) + 90000
 
 if not AceLibrary then error(MAJOR_VERSION .. " requires AceLibrary") end
 if not AceLibrary:IsNewVersion(MAJOR_VERSION, MINOR_VERSION) then return end
@@ -171,8 +171,9 @@ local buttons
 -- master secureframe that we pop onto menu items on mouseover. This requires
 -- some dark magic with OnLeave etc, but it's not too bad.
 
-local secureFrame = CreateFrame("Button", nil, nil, "SecureActionButtonTemplate")
-secureFrame:Hide()
+local eventFrame = CreateFrame("Button")
+local secureFrame
+local createSecureFrame
 
 local function secureFrame_Show(self)
   local owner = self.owner
@@ -209,37 +210,45 @@ local function secureFrame_Hide(self)
   self.secure = nil
 end
 
-secureFrame:SetScript("OnEvent",
-	function()
+eventFrame:SetScript("OnEvent",
+	function(this, event)
 		if event=="PLAYER_REGEN_ENABLED" then
-			this.combat = false
-			if not this:IsShown() and this.owner then
-				secureFrame_Show(this)
+			createSecureFrame()
+			secureFrame.combat = false
+			if not secureFrame:IsShown() and secureFrame.owner then
+				secureFrame_Show(secureFrame)
 			end
-		elseif event=="PLAYER_REGEN_DISABLED" then
-			this.combat = true
-			if this:IsShown() then
-				secureFrame_Hide(this)
+		elseif event=="PLAYER_REGEN_DISABLED" and secureFrame then
+			secureFrame.combat = true
+			if secureFrame:IsShown() then
+				secureFrame_Hide(secureFrame)
 			end
 		end
 	end
 )
-secureFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-secureFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+
+function createSecureFrame()
+  if secureFrame or InCombatLockdown() then return end
+  secureFrame = CreateFrame("Button", nil, nil, "SecureActionButtonTemplate")
+  secureFrame:RegisterForClicks("AnyDown")
+  secureFrame:Hide()
 
 secureFrame:SetScript("OnLeave",
-	function()
+	function(this)
 		local owner=this.owner
 		this:Deactivate()
-		owner:GetScript("OnLeave")()
+		owner:GetScript("OnLeave")(owner)
 	end
 )
 
 secureFrame:HookScript("OnClick",
-	function()
+	function(this , buttonClick)
 		local realthis = this
 		this = this.owner
-		this:GetScript("OnClick")()
+		if not this then return end
+		this:GetScript("OnClick")(this, buttonClick)
 	end
 )
 
@@ -266,6 +275,8 @@ function secureFrame:Deactivate()
 	self.owner = nil
 end
 
+end
+createSecureFrame()
 -- END secure frame utilities
 
 
@@ -354,8 +365,8 @@ local function CheckSize(self, level)
 			extra = extra + 24
 		end
 		button.text:SetFont(STANDARD_TEXT_FONT, button.textHeight)
-		if button.text:GetWidth() + extra > width then
-			width = button.text:GetWidth() + extra
+		if button.text:GetStringWidth() + extra > width then
+			width = button.text:GetStringWidth() + extra
 		end
 	end
 	level:SetWidth(width + 20)
@@ -592,6 +603,7 @@ local function AcquireButton(self, level)
 		button = CreateFrame("Button", "Dewdrop20Button" .. numButtons, nil)
 		button:SetFrameStrata("FULLSCREEN_DIALOG")
 		button:SetHeight(16)
+		button:RegisterForClicks("AnyDown")
 		local highlight = button:CreateTexture(nil, "BACKGROUND")
 		highlight:SetTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
 		button.highlight = highlight
@@ -611,7 +623,7 @@ local function AcquireButton(self, level)
 		radioHighlight:SetBlendMode("ADD")
 		radioHighlight:SetTexCoord(0.5, 0.75, 0, 1)
 		radioHighlight:Hide()
-		button:SetScript("OnEnter", function()
+		button:SetScript("OnEnter", function(this)
 			if (sliderFrame and sliderFrame:IsShown() and sliderFrame.mouseDown and sliderFrame.level == this.level.num + 1) or (editBoxFrame and editBoxFrame:IsShown() and editBoxFrame.mouseDown and editBoxFrame.level == this.level.num + 1) then
 				for i = 1, this.level.num do
 					Refresh(self, levels[i])
@@ -648,12 +660,12 @@ local function AcquireButton(self, level)
 			end
 			showGameTooltip(this)
 		end)
-		button:SetScript("OnHide", function()
+		button:SetScript("OnHide", function(this)
 			if this.secure and secureFrame:IsOwnedBy(this) then
 				secureFrame:Deactivate()
 			end
 		end)
-		button:SetScript("OnLeave", function()
+		button:SetScript("OnLeave", function(this)
 			if this.secure and secureFrame:IsShown() then
 				return;	-- it's ok, we didn't actually mouse out of the button, only onto the secure frame on top of it
 			end
@@ -668,7 +680,7 @@ local function AcquireButton(self, level)
 			GameTooltip:Hide()
 		end)
 		local first = true
-		button:SetScript("OnClick", function()
+		button:SetScript("OnClick", function(this, buttonClick)
 			if not this.disabled then
 				if this.hasColorSwatch then
 					local func = button.colorFunc
@@ -721,7 +733,39 @@ local function AcquireButton(self, level)
 					end
 					self:Close(1)
 					ShowUIPanel(ColorPickerFrame)
-				elseif this.func then
+				elseif this.funcRight and buttonClick == "RightButton" then
+					local level = this.level
+					if type(this.funcRight) == "string" then
+						if type(this.argRight1[this.funcRight]) ~= "function" then
+							self:error("Cannot call method %q", this.funcRight)
+						end
+						this.argRight1[this.funcRight](this.argRight1, getArgs(this, 'arg', 2))
+					else
+						this.funcRight(getArgs(this, 'arg', 1))
+					end
+					if this.closeWhenClicked then
+						self:Close()
+					elseif level:IsShown() then
+						for i = 1, level.num do
+							Refresh(self, levels[i])
+						end
+						local value = levels[level.num].value
+						for i = level.num-1, 1, -1 do
+							local level = levels[i]
+							local good = false
+							for _,button in ipairs(level.buttons) do
+								if button.value == value then
+									good = true
+									break
+								end
+							end
+							if not good then
+								Dewdrop:Close(i+1)
+							end
+							value = levels[i].value
+						end
+					end
+				elseif this.func and buttonClick == "LeftButton" then
 					local level = this.level
 					if type(this.func) == "string" then
 						if type(this.arg1[this.func]) ~= "function" then
@@ -753,22 +797,22 @@ local function AcquireButton(self, level)
 							value = levels[i].value
 						end
 					end
-				elseif this.closeWhenClicked then
-					self:Close()
-				end
+					elseif this.closeWhenClicked then
+						self:Close()
+					end
 			end
 		end)
 		local text = button:CreateFontString(nil, "ARTWORK")
 		button.text = text
 		text:SetFontObject(GameFontHighlightSmall)
 		button.text:SetFont(STANDARD_TEXT_FONT, UIDROPDOWNMENU_DEFAULT_TEXT_HEIGHT)
-		button:SetScript("OnMouseDown", function()
-			if not this.disabled and (this.func or this.colorFunc or this.closeWhenClicked) then
+		button:SetScript("OnMouseDown", function(this)
+			if not this.disabled and (this.func or this.funcRight or this.colorFunc or this.closeWhenClicked) then
 				text:SetPoint("LEFT", button, "LEFT", this.notCheckable and 1 or 25, -1)
 			end
 		end)
-		button:SetScript("OnMouseUp", function()
-			if not this.disabled and (this.func or this.colorFunc or this.closeWhenClicked) then
+		button:SetScript("OnMouseUp", function(this)
+			if not this.disabled and (this.func or this.funcRight or this.colorFunc or this.closeWhenClicked) then
 				text:SetPoint("LEFT", button, "LEFT", this.notCheckable and 0 or 24, 0)
 			end
 		end)
@@ -899,7 +943,7 @@ local function AcquireLevel(self, level)
 			frame:SetScript("OnLeave", function()
 				StartCounting(self, i)
 			end)
-			frame:SetScript("OnMouseWheel", function()
+			frame:SetScript("OnMouseWheel", function(this, arg1)
 				Scroll(self, frame, arg1 < 0)
 			end)
 			if i == 1 then
@@ -2925,6 +2969,7 @@ function Dewdrop:Register(parent, ...)
 		if parent:HasScript("OnMouseUp") then
 			local script = parent:GetScript("OnMouseUp")
 			parent:SetScript("OnMouseUp", function(this, ...)
+			    local arg1 = ...
 				if script then
 					script(this, ...)
 				end
@@ -3156,6 +3201,7 @@ function Dewdrop:AddLine(...)
 	end
 	if not button.disabled then
 		button.func = info.func
+		button.funcRight = info.funcRight
 		button.secure = info.secure
 	end
 	button.hasColorSwatch = info.hasColorSwatch
@@ -3168,6 +3214,7 @@ function Dewdrop:AddLine(...)
 		button.colorSwatch.texture:SetVertexColor(button.r, button.g, button.b)
 		button.checked = false
 		button.func = nil
+		button.funcRight = nil
 		button.colorFunc = info.colorFunc
 		local i = 1
 		while true do

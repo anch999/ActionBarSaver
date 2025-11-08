@@ -8,7 +8,7 @@
 ## OptionalDeps: Ace2
 ## X-AceLibrary-Dewdrop-2.0: true
 ## X-License: LGPL v2.1
-## X-Curse-Packaged-Version: r321
+## X-Curse-Packaged-Version: r326
 ## X-Curse-Project-Name: DewdropLib
 ## X-Curse-Project-ID: dewdroplib
 ## X-Curse-Repository-ID: wow/dewdroplib/mainline
