@@ -6,7 +6,7 @@ ActionBarSaver = select(2, ...)
 
 local ABS = ActionBarSaver
 local L = ABS.locals
-ABS.ACE = LibStub("AceAddon-3.0"):NewAddon("ActionBarSaver", "AceTimer-3.0", "AceEvent-3.0")
+ABS.ACE = LibStub("AceAddon-3.0"):NewAddon("ActionBarSaver", "AceEvent-3.0")
 
 local restoreErrors, spellCache, macroCache, macroNameCache, highestRanks = {}, {}, {}, {}, {}
 local iconCache, events
@@ -64,10 +64,8 @@ function ABS.ACE:OnEnable()
 	self:PopulateSpecDB()
 	self:OptionsDropDownInitialize()
 
-	self.ACE:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED", events)
-    self.ACE:RegisterEvent("ASCENSION_CA_SPECIALIZATION_ACTIVE_ID_CHANGED", events)
-	self.ACE:RegisterEvent("UNIT_SPELLCAST_START", events)
-	self.ACE:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED", events)
+    self.ACE:RegisterEvent("ASCENSION_CA_SPECIALIZATION_ACTIVE_ID_CHANGED")
+	self.ACE:RegisterEvent("UNIT_SPELLCAST_START")
 
 	self:InitializeMinimap()
 
@@ -214,7 +212,7 @@ function ABS:RestoreProfile(name, overrideClass, savedb)
 	if not savedb then savedb = "db" end
 	local set = self[savedb].sets[overrideClass or self.class][name]
 	if ( not set ) then
-		self:Print(string.format(L["No profile with the name \"%s\" exists."], set))
+		self:Print(string.format(L["No profile with the name \"%s\" exists."], name))
 		return
 	elseif ( InCombatLockdown() ) then
 		self:Print(string.format(L["Unable to restore profile \"%s\", you are in combat."], set))
@@ -553,37 +551,14 @@ SlashCmdList["ABS"] = function(msg)
 	end
 end
 
---[[ -- Check if we need to load
-local frame = CreateFrame("Frame")
-frame:RegisterEvent("ADDON_LOADED")
-frame:SetScript("OnEvent", function(self, event, addon)
-	if( addon == "ActionBarSaver" ) then
-		ABS:OnInitialize()
-		self:UnregisterEvent("ADDON_LOADED")
-	end
-end)
- ]]
---[[ checks to see if current spec is not last spec.
-Done this way to stop it messing up last spec if you stop the cast mid way
- ]]
- events = function(event, ...)
-    local target, spell = ...
-        if event == "UNIT_SPELLCAST_START" then
-            if target == "player" and string.find(spell, "Specialization") then
-				ABS.specChanged = false
-                if ABS.charDB.Specs[ABS:GetSpecId()][2] then
-                    ABS:SaveProfile(ABS:GetSpecId(), "charDB")
-                end
-            end
+function ABS.ACE:UNIT_SPELLCAST_START(event, target, spell)
+	if target == "player" and string.find(spell, "Specialization") then
+        if ABS.charDB.Specs[ABS:GetSpecId()][2] then
+        	ABS:SaveProfile(ABS:GetSpecId(), "charDB")
+        end
+    end
+end
 
-            if target == "player" and spell == "Activate Mystic Enchant Preset" then
-                ABS.ACE:CancelTimer(ABS.ACE.autoLoadTimer)
-            end
-        end
-		if event == "ASCENSION_CA_SPECIALIZATION_ACTIVE_ID_CHANGED" then
-			ABS.specChanged = true
-		end
-        if event == "ASCENSION_CA_SPECIALIZATION_ACTIVE_ID_CHANGED" or ( ABS.specChanged and event == "UNIT_SPELLCAST_SUCCEEDED" and target == "player" and  spell == "Activate Mystic Enchant Preset") then
-			ABS.ACE.autoLoadTimer = ABS.ACE:ScheduleTimer("AutoLoadTimer", 3)
-        end
+function ABS.ACE:ASCENSION_CA_SPECIALIZATION_ACTIVE_ID_CHANGED(event, target, spell)
+	Timer.After(1, ABS.AutoLoadTimer)
 end

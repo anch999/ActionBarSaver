@@ -184,7 +184,7 @@ function ABS:CreateOptionsUI()
     options.deleteProfile:SetPoint("TOPLEFT", options.frame.panel, "TOPLEFT", 160, -275)
     options.deleteProfile:SetText("Delete Profile")
     options.deleteProfile:SetScript("OnClick", function() StaticPopup_Show("ACTIONBARSAVER_DELETE_PROFILE") end)
-	
+
 	------------------------------ Specialization Panel ------------------------------
 
 	options.frame.specPanel = CreateFrame("FRAME", "ActionBarSaverOptionsFramespecPanel", UIParent, nil)

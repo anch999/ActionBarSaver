@@ -32,14 +32,16 @@ function ABS:AddDividerLine(maxLenght)
     return true
 end
 
-function ABS.ACE:AutoLoadTimer()
+function ABS:AutoLoadTimer()
+    if UnitCastingInfo("player") then
+        return Timer.After(1, ABS.AutoLoadTimer)
+    end
     local spec = ABS.charDB.Specs[ABS:GetSpecId()]
     if spec[1] ~= "No Selection" and spec[1] ~=  "specDefault" then
         ABS:RestoreProfile(spec[1], ABS.class)
     elseif spec[1] ==  "specDefault" then
         ABS:RestoreProfile(ABS:GetSpecId(), ABS.class, "charDB")
     end
-    ABS.specChanged = false
 end
 
 function ABS:AddGameTooltip(frame, text)
